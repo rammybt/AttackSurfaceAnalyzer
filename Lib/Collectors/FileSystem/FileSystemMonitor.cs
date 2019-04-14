@@ -106,12 +106,13 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
             cmd.Parameters.AddWithValue("@change_type", ChangeTypeStringToChangeType(obj.ChangeType.ToString()));
             cmd.Parameters.AddWithValue("@extended_results", "");
             cmd.Parameters.AddWithValue("@notify_filters", watcher.NotifyFilter.ToString());
-            cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(obj));
             FileSystemMonitorResult fileSystemObject = new FileSystemMonitorResult()
             {
                 evt = obj,
                 filter = watcher.NotifyFilter
             };
+            cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(fileSystemObject));
+
 
             cmd.ExecuteNonQuery();
         }
