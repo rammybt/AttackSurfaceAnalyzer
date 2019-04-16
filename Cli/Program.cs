@@ -16,7 +16,7 @@ using AttackSurfaceAnalyzer.Collectors.UserAccount;
 using AttackSurfaceAnalyzer.Collectors.Certificates;
 using AttackSurfaceAnalyzer.Utils;
 using CommandLine;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using RazorLight;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using Newtonsoft.Json;
@@ -226,7 +226,7 @@ namespace AttackSurfaceAnalyzer
 
         private static int RunConfigCommand(ConfigCommandOptions opts)
         {
-            DatabaseManager.SqliteFilename = opts.DatabaseFilename;
+            DatabaseManager.SQLiteFilename = opts.DatabaseFilename;
 
             if (opts.ResetDatabase)
             {
@@ -243,7 +243,7 @@ namespace AttackSurfaceAnalyzer
                     List<string> CollectRuns = GetRuns("collect");
                     foreach (string run in CollectRuns)
                     {
-                        using (var cmd = new SqliteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection, DatabaseManager.Transaction))
+                        using (var cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection))
                         {
                             cmd.Parameters.AddWithValue("@run_id", run);
                             using (var reader = cmd.ExecuteReader())
@@ -273,7 +273,7 @@ namespace AttackSurfaceAnalyzer
                     List<string> MonitorRuns = GetRuns("monitor");
                     foreach (string monitorRun in MonitorRuns)
                     {
-                        using (var cmd = new SqliteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection, DatabaseManager.Transaction))
+                        using (var cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection))
                         {
                             cmd.Parameters.AddWithValue("@run_id", monitorRun);
                             using (var reader = cmd.ExecuteReader())
@@ -327,7 +327,7 @@ namespace AttackSurfaceAnalyzer
 
             Log.Debug("{0} RunExportCollectCommand", Strings.Get("Begin"));
 
-            DatabaseManager.SqliteFilename = opts.DatabaseFilename;
+            DatabaseManager.SQLiteFilename = opts.DatabaseFilename;
 
             if (opts.FirstRunId == "Timestamps" || opts.SecondRunId == "Timestamps")
             {
@@ -401,7 +401,7 @@ namespace AttackSurfaceAnalyzer
             foreach (RESULT_TYPE ExportType in ToExport)
             {
                 List<CompareResult> records = new List<CompareResult>();
-                var cmd = new SqliteCommand(GET_COMPARISON_RESULTS, DatabaseManager.Connection);
+                var cmd = new SQLiteCommand(GET_COMPARISON_RESULTS, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@base_run_id", BaseId);
                 cmd.Parameters.AddWithValue("@compare_run_id", CompareId);
                 cmd.Parameters.AddWithValue("@data_type", ExportType);
@@ -415,7 +415,7 @@ namespace AttackSurfaceAnalyzer
 
                         if (ChangeType == CHANGE_TYPE.CREATED || ChangeType == CHANGE_TYPE.MODIFIED)
                         {
-                            var inner_cmd = new SqliteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(ExportType)), DatabaseManager.Connection);
+                            var inner_cmd = new SQLiteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(ExportType)), DatabaseManager.Connection);
                             inner_cmd.Parameters.AddWithValue("@run_id", reader["compare_run_id"].ToString());
                             inner_cmd.Parameters.AddWithValue("@row_key", reader["compare_row_key"].ToString());
                             using (var inner_reader = inner_cmd.ExecuteReader())
@@ -428,7 +428,7 @@ namespace AttackSurfaceAnalyzer
                         }
                         if (ChangeType == CHANGE_TYPE.DELETED || ChangeType == CHANGE_TYPE.MODIFIED)
                         {
-                            var inner_cmd = new SqliteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(ExportType)), DatabaseManager.Connection);
+                            var inner_cmd = new SQLiteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(ExportType)), DatabaseManager.Connection);
                             inner_cmd.Parameters.AddWithValue("@run_id", reader["base_run_id"].ToString());
                             inner_cmd.Parameters.AddWithValue("@row_key", reader["base_row_key"].ToString());
                             using (var inner_reader = inner_cmd.ExecuteReader())
@@ -539,7 +539,7 @@ namespace AttackSurfaceAnalyzer
             Logger.Setup(false, opts.Verbose);
 #endif
 
-            DatabaseManager.SqliteFilename = opts.DatabaseFilename;
+            DatabaseManager.SQLiteFilename = opts.DatabaseFilename;
 
             if (opts.RunId.Equals("Timestamp"))
             {
@@ -574,7 +574,7 @@ namespace AttackSurfaceAnalyzer
             string GET_SERIALIZED_RESULTS = "select change_type, Serialized from file_system_monitored where run_id = @run_id";
 
 
-            var cmd = new SqliteCommand(GET_SERIALIZED_RESULTS, DatabaseManager.Connection);
+            var cmd = new SQLiteCommand(GET_SERIALIZED_RESULTS, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", RunId);
             using (var reader = cmd.ExecuteReader())
             {
@@ -619,7 +619,7 @@ namespace AttackSurfaceAnalyzer
             Dictionary<string, string> StartEvent = new Dictionary<string, string>();
             Telemetry.TrackEvent("Begin monitoring", StartEvent);
 
-            DatabaseManager.SqliteFilename = opts.DatabaseFilename;
+            DatabaseManager.SQLiteFilename = opts.DatabaseFilename;
 
             if (opts.Overwrite)
             {
@@ -627,7 +627,7 @@ namespace AttackSurfaceAnalyzer
             }
             else
             {
-                var inner_cmd = new SqliteCommand(SQL_GET_RUN, DatabaseManager.Connection, DatabaseManager.Transaction);
+                var inner_cmd = new SQLiteCommand(SQL_GET_RUN, DatabaseManager.Connection);
                 inner_cmd.Parameters.AddWithValue("@run_id", opts.RunId);
                 using (var reader = inner_cmd.ExecuteReader())
                 {
@@ -642,7 +642,7 @@ namespace AttackSurfaceAnalyzer
 
             string INSERT_RUN = "insert into runs (run_id, file_system, ports, users, services, registry, certificates, type, timestamp, version) values (@run_id, @file_system, @ports, @users, @services, @registry, @certificates, @type, @timestamp, @version)";
 
-            var cmd = new SqliteCommand(INSERT_RUN, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(INSERT_RUN, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", opts.RunId);
             cmd.Parameters.AddWithValue("@file_system", opts.EnableFileSystemMonitor);
             cmd.Parameters.AddWithValue("@ports", false);
@@ -656,7 +656,7 @@ namespace AttackSurfaceAnalyzer
             try
             {
                 cmd.ExecuteNonQuery();
-                DatabaseManager.Commit();
+                //DatabaseManager.Commit();
             }
             catch (Exception e)
             {
@@ -789,7 +789,7 @@ namespace AttackSurfaceAnalyzer
                 }
             }
 
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
 
             return returnValue;
         }
@@ -834,7 +834,7 @@ namespace AttackSurfaceAnalyzer
         {
             string GET_SERIALIZED_RESULTS = "select * from runs where run_id = @run_id or run_id=@run_id_2";
             int count = 0;
-            var cmd = new SqliteCommand(GET_SERIALIZED_RESULTS, DatabaseManager.Connection);
+            var cmd = new SQLiteCommand(GET_SERIALIZED_RESULTS, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", BaseRunId);
             cmd.Parameters.AddWithValue("@run_id", CompareRunId);
             using (var reader = cmd.ExecuteReader())
@@ -873,7 +873,7 @@ namespace AttackSurfaceAnalyzer
                     { "User", 0 }
                 };
 
-            using (var cmd = new SqliteCommand(SQL_GET_RESULT_TYPES, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES, DatabaseManager.Connection))
             {
                 Log.Debug(Strings.Get("GettingResultTypes"));
                 cmd.Parameters.AddWithValue("@base_run_id", opts.FirstRunId);
@@ -957,7 +957,7 @@ namespace AttackSurfaceAnalyzer
 
             Telemetry.TrackEvent("End Command", EndEvent);
             
-            using (var cmd = new SqliteCommand(UPDATE_RUN_IN_RESULT_TABLE, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(UPDATE_RUN_IN_RESULT_TABLE, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@base_run_id", opts.FirstRunId);
                 cmd.Parameters.AddWithValue("@compare_run_id", opts.SecondRunId);
@@ -965,7 +965,7 @@ namespace AttackSurfaceAnalyzer
                 cmd.ExecuteNonQuery();
             }
 
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
             return results;
         }
 
@@ -1033,7 +1033,7 @@ namespace AttackSurfaceAnalyzer
                 }
             }
 
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
 
             return 0;
         }
@@ -1129,7 +1129,7 @@ namespace AttackSurfaceAnalyzer
             }
 
             Filter.LoadFilters(opts.FilterLocation);
-            DatabaseManager.SqliteFilename = opts.DatabaseFilename;
+            DatabaseManager.SQLiteFilename = opts.DatabaseFilename;
 
             if (opts.Overwrite)
             {
@@ -1137,7 +1137,7 @@ namespace AttackSurfaceAnalyzer
             }
             else
             {
-                var cmd = new SqliteCommand(SQL_GET_RUN, DatabaseManager.Connection);
+                var cmd = new SQLiteCommand(SQL_GET_RUN, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@run_id", opts.RunId);
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -1153,11 +1153,11 @@ namespace AttackSurfaceAnalyzer
 
             string INSERT_RUN = "insert into runs (run_id, file_system, ports, users, services, registry, certificates, type, timestamp, version) values (@run_id, @file_system, @ports, @users, @services, @registry, @certificates, @type, @timestamp, @version)";
 
-            using (var cmd = new SqliteCommand(INSERT_RUN, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(INSERT_RUN, DatabaseManager.Connection))
             {
                 if (opts.MatchedCollectorId != null)
                 {
-                    using (var inner_cmd = new SqliteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection, DatabaseManager.Transaction))
+                    using (var inner_cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection))
                     {
                         inner_cmd.Parameters.AddWithValue("@run_id", opts.MatchedCollectorId);
                         using (var reader = inner_cmd.ExecuteReader())
@@ -1200,7 +1200,7 @@ namespace AttackSurfaceAnalyzer
                 try
                 {
                     cmd.ExecuteNonQuery();
-                    DatabaseManager.Commit();
+                    //DatabaseManager.Commit();
                 }
                 catch (Exception e)
                 {
@@ -1230,7 +1230,7 @@ namespace AttackSurfaceAnalyzer
 
             Telemetry.TrackEvent("End Command", EndEvent);
 
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
             return returnValue;
         }
 
@@ -1245,7 +1245,7 @@ namespace AttackSurfaceAnalyzer
 
             List<string> Runs = new List<string>();
 
-            var cmd = new SqliteCommand(Select_Runs, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(Select_Runs, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@type", type);
             using (var reader = cmd.ExecuteReader())
             {
@@ -1279,7 +1279,7 @@ namespace AttackSurfaceAnalyzer
 #else
             Logger.Setup(false, opts.Verbose);
 #endif
-            DatabaseManager.SqliteFilename = opts.DatabaseFilename;
+            DatabaseManager.SQLiteFilename = opts.DatabaseFilename;
             Dictionary<string, string> StartEvent = new Dictionary<string, string>();
 
             Telemetry.TrackEvent("Begin Compare Command", StartEvent);

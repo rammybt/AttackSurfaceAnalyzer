@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Microsoft.ApplicationInsights.DataContracts;
 
 namespace AttackSurfaceAnalyzer.Utils
@@ -19,7 +19,7 @@ namespace AttackSurfaceAnalyzer.Utils
 
         public static void Setup(bool Gui)
         {
-            using (var cmd = new SqliteCommand(CHECK_TELEMETRY, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(CHECK_TELEMETRY, DatabaseManager.Connection))
             {
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -46,11 +46,11 @@ namespace AttackSurfaceAnalyzer.Utils
         public static void SetOptOut(bool OptOut)
         {
             TelemetryConfiguration.Active.DisableTelemetry = OptOut;
-            using (var cmd = new SqliteCommand(UPDATE_TELEMETRY, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(UPDATE_TELEMETRY, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@TelemetryOptOut", OptOut.ToString());
                 cmd.ExecuteNonQuery();
-                DatabaseManager.Commit();
+                //DatabaseManager.Commit();
             }
         }
 

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -41,12 +41,12 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
             
 
             var addObjects = new List<UserAccountResult>();
-            var cmd = new SqliteCommand(SELECT_INSERTED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SELECT_INSERTED_SQL, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
             cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
             try
             {
-                using (SqliteDataReader reader = cmd.ExecuteReader())
+                using (SQLiteDataReader reader = cmd.ExecuteReader())
                 {
                     while (reader.Read())
                     {
@@ -68,7 +68,7 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
                 Log.Information("{0} {1} {2}", Strings.Get("Found"), addObjects.Count, Strings.Get("Created")); ;
 
                 var removeObjects = new List<UserAccountResult>();
-                cmd = new SqliteCommand(SELECT_DELETED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+                cmd = new SQLiteCommand(SELECT_DELETED_SQL, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
                 cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
                 using (var reader = cmd.ExecuteReader())
@@ -93,7 +93,7 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
                 Log.Information("{0} {1} {2}", Strings.Get("Found"), removeObjects.Count, Strings.Get("Deleted")); ;
 
                 var modifyObjects = new List<UserAccountResult>();
-                cmd = new SqliteCommand(SELECT_MODIFIED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+                cmd = new SQLiteCommand(SELECT_MODIFIED_SQL, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
                 cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
                 using (var reader = cmd.ExecuteReader())

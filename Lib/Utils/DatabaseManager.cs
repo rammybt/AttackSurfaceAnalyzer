@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 using System;
 using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Serilog;
 
 namespace AttackSurfaceAnalyzer.Utils
@@ -56,84 +56,103 @@ namespace AttackSurfaceAnalyzer.Utils
         private static readonly string SQL_SELECT_LATEST_N_RUNS = "select run_id from runs where type = @type order by timestamp desc limit 0,@limit;";
 
 
-        public static SqliteConnection Connection;
-        public static SqliteConnection ReadOnlyConnection;
+        public static SQLiteConnection Connection;
+        public static SQLiteConnection ReadOnlyConnection;
 
-        private static SqliteTransaction _transaction;
+        private static SQLiteTransaction _transaction;
 
         public static void Setup()
         {
             if (Connection == null)
             {
-                Log.Debug("Starting database setup");
-                Connection = new SqliteConnection($"Filename=" + _SqliteFilename);
+                Log.Debug("Starting database setup of {0}",_SQLiteFilename);
+                Connection = new SQLiteConnection(string.Format("Data Source={0};Version=3;Foreign Keys=True;Journal Mode=Wal;",_SQLiteFilename));
                 Connection.Open();
 
-                var cmd = new SqliteCommand(SQL_CREATE_RUNS, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_RUNS);
+                var cmd = new SQLiteCommand(SQL_CREATE_RUNS, DatabaseManager.Connection);
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_FILE_MONITORED, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_FILE_MONITORED);
+                cmd.CommandText = SQL_CREATE_FILE_MONITORED;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_FILE_SYSTEM_COLLECTION, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_FILE_SYSTEM_COLLECTION);
+                cmd.CommandText = SQL_CREATE_FILE_SYSTEM_COLLECTION;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_OPEN_PORT_COLLECTION, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_OPEN_PORT_COLLECTION);
+                cmd.CommandText = SQL_CREATE_OPEN_PORT_COLLECTION;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_SERVICE_COLLECTION, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_SERVICE_COLLECTION);
+                cmd.CommandText = SQL_CREATE_SERVICE_COLLECTION;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_USER_COLLECTION, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_USER_COLLECTION);
+                cmd.CommandText = SQL_CREATE_USER_COLLECTION;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_REGISTRY_COLLECTION, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_REGISTRY_COLLECTION);
+                cmd.CommandText = SQL_CREATE_REGISTRY_COLLECTION;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_CERTIFICATES_COLLECTION, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_CERTIFICATES_COLLECTION);
+                cmd.CommandText = SQL_CREATE_CERTIFICATES_COLLECTION;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_COMPARE_RESULT_TABLE, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_COMPARE_RESULT_TABLE);
+                cmd.CommandText = SQL_CREATE_COMPARE_RESULT_TABLE;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_ANALYZED_TABLE, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_ANALYZED_TABLE);
+                cmd.CommandText = SQL_CREATE_ANALYZED_TABLE;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_PERSISTED_SETTINGS, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_PERSISTED_SETTINGS);
+                cmd.CommandText = SQL_CREATE_PERSISTED_SETTINGS;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_DEFAULT_SETTINGS, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_DEFAULT_SETTINGS);
+                cmd.CommandText = SQL_CREATE_DEFAULT_SETTINGS;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_FILE_SYSTEM_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_FILE_SYSTEM_INDEX);
+                cmd.CommandText = SQL_CREATE_FILE_SYSTEM_INDEX;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_REGISTRY_KEY_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_REGISTRY_KEY_INDEX);
+                cmd.CommandText = SQL_CREATE_REGISTRY_KEY_INDEX;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_REGISTRY_ROW_KEY_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_REGISTRY_ROW_KEY_INDEX);
+                cmd.CommandText = SQL_CREATE_REGISTRY_ROW_KEY_INDEX;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_REGISTRY_RUN_ID_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
-                cmd.ExecuteNonQuery();
-                
-                cmd = new SqliteCommand(SQL_CREATE_RESULT_CHANGE_TYPE_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_REGISTRY_RUN_ID_INDEX);
+                cmd.CommandText = SQL_CREATE_REGISTRY_RUN_ID_INDEX;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_RESULT_BASE_RUN_ID_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_RESULT_CHANGE_TYPE_INDEX);
+                cmd.CommandText = SQL_CREATE_RESULT_CHANGE_TYPE_INDEX;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_RESULT_COMPARE_RUN_ID_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_RESULT_BASE_RUN_ID_INDEX);
+                cmd.CommandText = SQL_CREATE_RESULT_BASE_RUN_ID_INDEX;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_RESULT_BASE_ROW_KEY_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_RESULT_COMPARE_RUN_ID_INDEX);
+                cmd.CommandText = SQL_CREATE_RESULT_COMPARE_RUN_ID_INDEX;
                 cmd.ExecuteNonQuery();
 
-                cmd = new SqliteCommand(SQL_CREATE_RESULT_DATA_TYPE_INDEX, DatabaseManager.Connection, DatabaseManager.Transaction);
+                Log.Verbose(SQL_CREATE_RESULT_BASE_ROW_KEY_INDEX);
+                cmd.CommandText = SQL_CREATE_RESULT_BASE_ROW_KEY_INDEX;
                 cmd.ExecuteNonQuery();
-                
-                DatabaseManager.Transaction.Commit();
-                _transaction = null;
+
+                Log.Verbose(SQL_CREATE_RESULT_DATA_TYPE_INDEX);
+                cmd.CommandText = SQL_CREATE_RESULT_DATA_TYPE_INDEX;
+                cmd.ExecuteNonQuery();
+
                 Log.Debug("Done with database setup");
 
             }
@@ -144,7 +163,7 @@ namespace AttackSurfaceAnalyzer.Utils
 
 
             List<string> output = new List<string>();
-            using (var cmd = new SqliteCommand(SQL_SELECT_LATEST_N_RUNS, DatabaseManager.Connection))
+            using (var cmd = new SQLiteCommand(SQL_SELECT_LATEST_N_RUNS, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@type", type);
                 cmd.Parameters.AddWithValue("@limit", numberOfIds);
@@ -169,7 +188,7 @@ namespace AttackSurfaceAnalyzer.Utils
         }
 
 
-        public static SqliteTransaction Transaction
+        public static SQLiteTransaction Transaction
         {
             get
             {
@@ -199,15 +218,15 @@ namespace AttackSurfaceAnalyzer.Utils
 
         }
 
-        private static string _SqliteFilename = "asa.sqlite";
+        private static string _SQLiteFilename = "asa.sqlite";
 
         public static bool _ReadOnly;
 
-        public static string SqliteFilename
+        public static string SQLiteFilename
         {
             get
             {
-                return _SqliteFilename;
+                return _SQLiteFilename;
             }
             set
             {
@@ -236,7 +255,7 @@ namespace AttackSurfaceAnalyzer.Utils
 
                 try
                 {
-                    _SqliteFilename = value;
+                    _SQLiteFilename = value;
                     //This doesn't work?
                     //_ReadOnly ? SetupReadOnly() : Setup();
                     if (_ReadOnly)
@@ -258,8 +277,8 @@ namespace AttackSurfaceAnalyzer.Utils
 
         private static void SetupReadOnly()
         {
-            Connection = new SqliteConnection($"Filename=" + _SqliteFilename);
-            Connection.Open();
+            return;
+            //Not yet implemented
         }
 
         public static void CloseDatabase()
@@ -274,7 +293,7 @@ namespace AttackSurfaceAnalyzer.Utils
 
         public static void DeleteRun(string runid)
         {
-            using (var cmd = new SqliteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@run_id", runid);
                 using (var reader = cmd.ExecuteReader())
@@ -286,7 +305,7 @@ namespace AttackSurfaceAnalyzer.Utils
                     }
                     while (reader.Read())
                     {
-                        using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_RUN, DatabaseManager.Connection, DatabaseManager.Transaction))
+                        using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_RUN, DatabaseManager.Connection))
                         {
                             inner_cmd.Parameters.AddWithValue("@run_id", runid);
                             inner_cmd.ExecuteNonQuery();
@@ -295,7 +314,7 @@ namespace AttackSurfaceAnalyzer.Utils
                         {
                             if ((int.Parse(reader["file_system"].ToString()) != 0))
                             {
-                                using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_FILES_MONITORED, DatabaseManager.Connection, DatabaseManager.Transaction))
+                                using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_FILES_MONITORED, DatabaseManager.Connection))
                                 {
                                     inner_cmd.Parameters.AddWithValue("@run_id", runid);
                                     inner_cmd.ExecuteNonQuery();
@@ -306,7 +325,7 @@ namespace AttackSurfaceAnalyzer.Utils
                         {
                             if ((int.Parse(reader["file_system"].ToString()) != 0))
                             {
-                                using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_FILES, DatabaseManager.Connection, DatabaseManager.Transaction))
+                                using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_FILES, DatabaseManager.Connection))
                                 {
                                     inner_cmd.Parameters.AddWithValue("@run_id", runid);
                                     inner_cmd.ExecuteNonQuery();
@@ -314,7 +333,7 @@ namespace AttackSurfaceAnalyzer.Utils
                             }
                             if ((int.Parse(reader["ports"].ToString()) != 0))
                             {
-                                using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_PORTS, DatabaseManager.Connection, DatabaseManager.Transaction))
+                                using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_PORTS, DatabaseManager.Connection))
                                 {
                                     inner_cmd.Parameters.AddWithValue("@run_id", runid);
                                     inner_cmd.ExecuteNonQuery();
@@ -324,7 +343,7 @@ namespace AttackSurfaceAnalyzer.Utils
 
                             if ((int.Parse(reader["users"].ToString()) != 0))
                             {
-                                using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_USERS, DatabaseManager.Connection, DatabaseManager.Transaction))
+                                using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_USERS, DatabaseManager.Connection))
                                 {
                                     inner_cmd.Parameters.AddWithValue("@run_id", runid);
                                     inner_cmd.ExecuteNonQuery();
@@ -332,7 +351,7 @@ namespace AttackSurfaceAnalyzer.Utils
                             }
                             if ((int.Parse(reader["services"].ToString()) != 0))
                             {
-                                using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_SERVICES, DatabaseManager.Connection, DatabaseManager.Transaction))
+                                using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_SERVICES, DatabaseManager.Connection))
                                 {
                                     inner_cmd.Parameters.AddWithValue("@run_id", runid);
                                     inner_cmd.ExecuteNonQuery();
@@ -340,7 +359,7 @@ namespace AttackSurfaceAnalyzer.Utils
                             }
                             if ((int.Parse(reader["registry"].ToString()) != 0))
                             {
-                                using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_REGISTRY, DatabaseManager.Connection, DatabaseManager.Transaction))
+                                using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_REGISTRY, DatabaseManager.Connection))
                                 {
                                     inner_cmd.Parameters.AddWithValue("@run_id", runid);
                                     inner_cmd.ExecuteNonQuery();
@@ -348,7 +367,7 @@ namespace AttackSurfaceAnalyzer.Utils
                             }
                             if ((int.Parse(reader["certificates"].ToString()) != 0))
                             {
-                                using (var inner_cmd = new SqliteCommand(SQL_TRUNCATE_CERTIFICATES, DatabaseManager.Connection, DatabaseManager.Transaction))
+                                using (var inner_cmd = new SQLiteCommand(SQL_TRUNCATE_CERTIFICATES, DatabaseManager.Connection))
                                 {
                                     inner_cmd.Parameters.AddWithValue("@run_id", runid);
                                     inner_cmd.ExecuteNonQuery();
@@ -358,7 +377,7 @@ namespace AttackSurfaceAnalyzer.Utils
                     }
                 }
             }
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
         }
     }
 }

@@ -11,7 +11,7 @@ using AttackSurfaceAnalyzer.Utils;
 using AttackSurfaceAnalyzer.Models;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
 using Microsoft.ApplicationInsights.Extensibility;
@@ -64,7 +64,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
         {
 
             var results = new List<OutputFileMonitorResult>();
-            using (var cmd = new SqliteCommand(GET_MONITOR_RESULTS, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(GET_MONITOR_RESULTS, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@run_id", RunId);
                 cmd.Parameters.AddWithValue("@offset", Offset);
@@ -92,7 +92,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
 
             Dictionary<string, object> output = new Dictionary<string, object>();
             var result_count = 0;
-            using (var cmd = new SqliteCommand(GET_RESULT_COUNT_MONITORED, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(GET_RESULT_COUNT_MONITORED, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@run_id", RunId);
                 using (var reader = cmd.ExecuteReader())
@@ -117,7 +117,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
         {
             var results = new List<OutputCompareResult>();
 
-            using (var cmd = new SqliteCommand(GET_COMPARISON_RESULTS, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(GET_COMPARISON_RESULTS, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@base_run_id", BaseId);
                 cmd.Parameters.AddWithValue("@compare_run_id", CompareId);
@@ -146,7 +146,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
             {
                 if (obj.ChangeType == CHANGE_TYPE.CREATED || obj.ChangeType == CHANGE_TYPE.MODIFIED)
                 {
-                    using (var cmd = new SqliteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(obj.ResultType)), DatabaseManager.Connection, DatabaseManager.Transaction))
+                    using (var cmd = new SQLiteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(obj.ResultType)), DatabaseManager.Connection))
                     {
                         cmd.Parameters.AddWithValue("@run_id", obj.CompareRunId);
                         cmd.Parameters.AddWithValue("@row_key", obj.CompareRowKey);
@@ -161,7 +161,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
                 }
                 if (obj.ChangeType == CHANGE_TYPE.DELETED || obj.ChangeType == CHANGE_TYPE.MODIFIED)
                 {
-                    using (var cmd = new SqliteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(obj.ResultType)), DatabaseManager.Connection, DatabaseManager.Transaction))
+                    using (var cmd = new SQLiteCommand(GET_SERIALIZED_RESULTS.Replace("@table_name", Helpers.ResultTypeToTableName(obj.ResultType)), DatabaseManager.Connection))
                     {
                         cmd.Parameters.AddWithValue("@run_id", obj.BaseRunId);
                         cmd.Parameters.AddWithValue("@row_key", obj.BaseRowKey);
@@ -178,7 +178,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
 
             Dictionary<string, object> output = new Dictionary<string, object>();
             var result_count = 0;
-            using (var cmd = new SqliteCommand(GET_RESULT_COUNT, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(GET_RESULT_COUNT, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@base_run_id", BaseId);
                 cmd.Parameters.AddWithValue("@compare_run_id", CompareId);
@@ -223,7 +223,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
                 { "Service", 0 },
                 { "User", 0 }
             };
-            using (var cmd = new SqliteCommand(SQL_GET_RESULT_TYPES, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@base_run_id", BaseId?.ToString());
                 cmd.Parameters.AddWithValue("@compare_run_id", CompareId?.ToString());
@@ -349,7 +349,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
             AttackSurfaceAnalyzerCLI.ClearCollectors();
             string Select_Runs = "select run_id from runs where run_id=@run_id";
 
-            using (var cmd = new SqliteCommand(Select_Runs, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(Select_Runs, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@run_id", Id);
                 using (var reader = cmd.ExecuteReader())
@@ -379,7 +379,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
         public ActionResult StartMonitoring(string RunId, string Directory, string Extension)
         {
 
-            using (var cmd = new SqliteCommand(INSERT_RUN, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(INSERT_RUN, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@run_id", RunId);
                 cmd.Parameters.AddWithValue("@file_system", true);
@@ -394,7 +394,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
                 try
                 {
                     cmd.ExecuteNonQuery();
-                    DatabaseManager.Commit();
+                    //DatabaseManager.Commit();
                 }
                 catch (Exception e)
                 {
@@ -437,7 +437,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
             }
 
 
-            using (var cmd = new SqliteCommand(SQL_CHECK_IF_COMPARISON_PREVIOUSLY_COMPLETED, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(SQL_CHECK_IF_COMPARISON_PREVIOUSLY_COMPLETED, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@base_run_id", opts.FirstRunId);
                 cmd.Parameters.AddWithValue("@compare_run_id", opts.SecondRunId);
@@ -507,7 +507,7 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
         {
             List<DataRunModel>  output = new List<DataRunModel>();
 
-            using (var cmd = new SqliteCommand(SQL_QUERY_ANALYZED, DatabaseManager.Connection, DatabaseManager.Transaction))
+            using (var cmd = new SQLiteCommand(SQL_QUERY_ANALYZED, DatabaseManager.Connection))
             {
                 cmd.Parameters.AddWithValue("@status", RUN_STATUS.COMPLETED);
 

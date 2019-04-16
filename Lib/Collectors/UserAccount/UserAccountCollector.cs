@@ -8,7 +8,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -33,7 +33,7 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
 
         public void Truncate(string runid)
         {
-            var cmd = new SqliteCommand(SQL_TRUNCATE, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_TRUNCATE, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
         }
 
@@ -46,7 +46,7 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
         {
             _numCollected++;
 
-            var cmd = new SqliteCommand(INSERT_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(INSERT_SQL, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId ?? "");
             cmd.Parameters.AddWithValue("@row_key", obj.RowKey);
             cmd.Parameters.AddWithValue("@account_type", obj.AccountType ?? "");

@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using Serilog;
@@ -48,7 +48,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
 
         public void Truncate(string runid)
         {
-            var cmd = new SqliteCommand(SQL_TRUNCATE, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_TRUNCATE, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
         }
 
@@ -73,7 +73,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
             {
                 string hashSeed = String.Format("{0}{1}", obj.Key, JsonConvert.SerializeObject(obj));
 
-                using (var cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction))
+                using (var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection))
                 {
                     cmd.Parameters.AddWithValue("@run_id", this.runId);
                     cmd.Parameters.AddWithValue("@row_key", CryptoHelpers.CreateHash(hashSeed));
@@ -160,7 +160,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
 
                 }));
             
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
             Stop();
         }
     }

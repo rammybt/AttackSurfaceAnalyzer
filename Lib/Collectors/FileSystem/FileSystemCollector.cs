@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -21,7 +21,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
         private static readonly string SQL_INSERT = "insert into file_system (run_id, row_key, path, permissions, size, hash, serialized) values (@run_id, @row_key, @path, @permissions, @size, @hash, @serialized)";
 
         private readonly Queue<FileSystemObject> _queue = new Queue<FileSystemObject>();
-        private readonly SqliteCommand cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction);
+        private readonly SQLiteCommand cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
 
         string runId;
 
@@ -60,7 +60,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
         }
 
 
-        public void Write(SqliteCommand cmd, FileSystemObject obj)
+        public void Write(SQLiteCommand cmd, FileSystemObject obj)
         {
             cmd.Parameters.Clear();
             cmd.Parameters.AddWithValue("@run_id", runId);
@@ -107,7 +107,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 
         public void Write(FileSystemObject obj)
         {
-            SqliteCommand cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction);
+            SQLiteCommand cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
             cmd.Parameters.AddWithValue("@row_key", obj.RowKey);
             cmd.Parameters.AddWithValue("@path", obj.Path);
@@ -130,7 +130,6 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 
         public FileSystemCollector(string runId, bool enableHashing = false, string directories = "")
         {
-            Log.Debug("Initializing a new {0} object.", this.GetType().Name);
             this.runId = runId;
             this.roots = new HashSet<string>();
             INCLUDE_CONTENT_HASH = enableHashing;
@@ -150,7 +149,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 
         public void Truncate(string runid)
         {
-            var cmd = new SqliteCommand(SQL_TRUNCATE, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_TRUNCATE, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
         }
 
@@ -259,7 +258,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 
             Stop();
 
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
         }
     }
 }

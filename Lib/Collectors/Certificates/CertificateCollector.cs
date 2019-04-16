@@ -7,7 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -29,13 +29,12 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
 
         public CertificateCollector(string runId)
         {
-            Log.Debug("Initializing a new {0} object.", this.GetType().Name);
             this.runId = runId;
         }
 
         public void Truncate(string runid)
         {
-            var cmd = new SqliteCommand(SQL_TRUNCATE, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_TRUNCATE, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
             cmd.ExecuteNonQuery();
         }
@@ -50,7 +49,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
             try
             {
                 recordCounter++;
-                var cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction);
+                var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@run_id", runId);
                 cmd.Parameters.AddWithValue("@store_location", storeLocation.ToString());
                 cmd.Parameters.AddWithValue("@store_name", storeName.ToString());
@@ -84,7 +83,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
             {
                 Log.Warning(e.StackTrace);
             }
-            catch (Microsoft.Data.Sqlite.SqliteException e)
+            catch (SQLiteException e)
             {
                 Log.Warning(e.Message);
                 //This catches duplicate certificates
@@ -125,7 +124,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
                     }
                 }
             }
-            DatabaseManager.Commit();
+            //DatabaseManager.Commit();
             Stop();
         }
     }

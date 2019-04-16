@@ -24,7 +24,6 @@ namespace AttackSurfaceAnalyzer.Utils
             while (dirs.Count > 0)
             {
                 string currentDir = dirs.Pop();
-                Log.Verbose(currentDir);
                 if (Filter.IsFiltered(Helpers.RuntimeString(), "Scan", "File", "Path", currentDir))
                 {
                     continue;

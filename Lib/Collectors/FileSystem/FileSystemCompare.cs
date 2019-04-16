@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -42,7 +42,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
                     throw new ArgumentNullException("secondRunId");
                 }
                 var addObjects = new List<FileSystemResult>();
-                var cmd = new SqliteCommand(SELECT_INSERTED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+                var cmd = new SQLiteCommand(SELECT_INSERTED_SQL, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
                 cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
                 using (var reader = cmd.ExecuteReader())
@@ -68,7 +68,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
                 Log.Information("Found {0} Created", addObjects.Count);
 
                 var removeObjects = new List<FileSystemResult>();
-                cmd = new SqliteCommand(SELECT_DELETED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+                cmd = new SQLiteCommand(SELECT_DELETED_SQL, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
                 cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
                 using (var reader = cmd.ExecuteReader())
@@ -94,7 +94,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
                 Log.Information("Found {0} Deleted", removeObjects.Count);
 
                 var modifyObjects = new List<FileSystemResult>();
-                cmd = new SqliteCommand(SELECT_MODIFIED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+                cmd = new SQLiteCommand(SELECT_MODIFIED_SQL, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
                 cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
                 using (var reader = cmd.ExecuteReader())

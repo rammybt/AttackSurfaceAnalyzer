@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Serilog;
 
 namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
@@ -49,7 +49,7 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
             
 
             var addObjects = new List<OpenPortResult>();
-            var cmd = new SqliteCommand(SELECT_INSERTED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SELECT_INSERTED_SQL, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
             cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
             using (var reader = cmd.ExecuteReader())
@@ -83,7 +83,7 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
             Log.Information("{0} {1} {2}", Strings.Get("Found"), addObjects.Count, Strings.Get("Created")); ;
 
             var removeObjects = new List<OpenPortResult>();
-            cmd = new SqliteCommand(SELECT_DELETED_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+            cmd = new SQLiteCommand(SELECT_DELETED_SQL, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@first_run_id", firstRunId);
             cmd.Parameters.AddWithValue("@second_run_id", secondRunId);
             using (var reader = cmd.ExecuteReader())

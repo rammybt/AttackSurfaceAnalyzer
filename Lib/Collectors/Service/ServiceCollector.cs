@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.ServiceProcess;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Newtonsoft.Json;
 using Serilog;
 using System.Text.RegularExpressions;
@@ -50,7 +50,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
         {
             _numCollected++;
 
-            var cmd = new SqliteCommand(INSERT_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(INSERT_SQL, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId);
             cmd.Parameters.AddWithValue("@row_key", obj.GetUniqueHash());
             cmd.Parameters.AddWithValue("@service_name", obj.ServiceName);
@@ -64,7 +64,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
 
         public void Truncate(string runid)
         {
-            var cmd = new SqliteCommand(SQL_TRUNCATE, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_TRUNCATE, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
         }
         /// <summary>

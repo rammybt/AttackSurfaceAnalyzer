@@ -7,7 +7,7 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using Newtonsoft.Json;
 using Serilog;
@@ -34,7 +34,7 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
 
         public void Truncate(string runid)
         {
-            var cmd = new SqliteCommand(SQL_TRUNCATE, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_TRUNCATE, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
             cmd.ExecuteNonQuery();
         }
@@ -75,7 +75,7 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
 
             this.processedObjects.Add(objStr);
 
-            var cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId);
             cmd.Parameters.AddWithValue("@row_key", obj.RowKey);
             cmd.Parameters.AddWithValue("@family", obj.family);

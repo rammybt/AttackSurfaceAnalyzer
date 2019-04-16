@@ -6,7 +6,6 @@
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <ReleaseVersion>2.0.0.0-pre-alpha</ReleaseVersion>
     <FileUpgradeFlags>40</FileUpgradeFlags>
-    <UpgradeBackupLocation>C:\Users\Gstoc\Documents\GitHub\AttackSurfaceAnalyzer\Backup\Cli\</UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -47,17 +46,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Remove="asa.sqlite" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="nlog.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 </Project>

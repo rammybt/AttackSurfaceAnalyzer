@@ -7,7 +7,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Security.AccessControl;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Newtonsoft.Json;
 using Serilog;
 
@@ -53,7 +53,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 
         public void Truncate(string runid)
         {
-            var cmd = new SqliteCommand(SQL_TRUNCATE, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_TRUNCATE, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", runId);
         }
 
@@ -95,7 +95,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
         {
             string timestamp = DateTime.Now.ToString("O");
 
-            var cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId);
             cmd.Parameters.AddWithValue("@row_key", CryptoHelpers.CreateHash(obj.ToString() + timestamp + watcher.NotifyFilter.ToString() + obj.ChangeType.ToString()));
             cmd.Parameters.AddWithValue("@timestamp", timestamp);
@@ -164,7 +164,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
             };
             string timestamp = DateTime.Now.ToString("O");
 
-            var cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId);
             cmd.Parameters.AddWithValue("@row_key", CryptoHelpers.CreateHash(obj.ToString() + timestamp + watcher.NotifyFilter.ToString() + obj.ChangeType.ToString()));
             cmd.Parameters.AddWithValue("@timestamp", timestamp);
@@ -194,7 +194,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 
             string timestamp = DateTime.Now.ToString("O");
 
-            var cmd = new SqliteCommand(SQL_INSERT, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId);
             cmd.Parameters.AddWithValue("@row_key", CryptoHelpers.CreateHash(obj.ToString() + timestamp + watcher.NotifyFilter.ToString() + obj.ChangeType.ToString()));
             cmd.Parameters.AddWithValue("@timestamp", timestamp);

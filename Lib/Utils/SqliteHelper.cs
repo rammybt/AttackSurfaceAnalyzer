@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 namespace AttackSurfaceAnalyzer.Utils
 {
-    public class SqliteHelper
+    public class SQLiteHelper
     {
         public static string Escape(string s)
         {

@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using Serilog;
 
 namespace AttackSurfaceAnalyzer.Collectors
@@ -48,7 +48,7 @@ namespace AttackSurfaceAnalyzer.Collectors
         protected void InsertResult(CompareResult obj)
         {
             numResults++;
-            var cmd = new SqliteCommand(INSERT_RESULT_SQL, DatabaseManager.Connection, DatabaseManager.Transaction);
+            var cmd = new SQLiteCommand(INSERT_RESULT_SQL, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@base_run_id", obj.BaseRunId);
             cmd.Parameters.AddWithValue("@compare_run_id", obj.CompareRunId);
             cmd.Parameters.AddWithValue("@change_type", obj.ChangeType);
