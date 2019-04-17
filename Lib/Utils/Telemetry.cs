@@ -50,7 +50,6 @@ namespace AttackSurfaceAnalyzer.Utils
             {
                 cmd.Parameters.AddWithValue("@TelemetryOptOut", OptOut.ToString());
                 cmd.ExecuteNonQuery();
-                //DatabaseManager.Commit();
             }
         }
 

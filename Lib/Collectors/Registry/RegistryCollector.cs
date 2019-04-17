@@ -160,7 +160,6 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
 
                 }));
             
-            //DatabaseManager.Commit();
             Stop();
         }
     }

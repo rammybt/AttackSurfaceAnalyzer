@@ -656,7 +656,6 @@ namespace AttackSurfaceAnalyzer
             try
             {
                 cmd.ExecuteNonQuery();
-                //DatabaseManager.Commit();
             }
             catch (Exception e)
             {
@@ -745,52 +744,54 @@ namespace AttackSurfaceAnalyzer
                 // Start the timer
                 aTimer.Enabled = true;
             }
-
-            foreach (FileSystemMonitor c in monitors)
+            using (SQLiteTransaction tr = DatabaseManager.Connection.BeginTransaction())
             {
-
-                Log.Information(Strings.Get("Begin")+" : {0}", c.GetType().Name);
-
-                try
+                foreach (FileSystemMonitor c in monitors)
                 {
-                    c.Start();
+
+                    Log.Information(Strings.Get("Begin") + " : {0}", c.GetType().Name);
+
+                    try
+                    {
+                        c.Start();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, "{3} {0}: {1} {2}", c.GetType().Name, ex.Message, ex.StackTrace, Strings.Get("Err_CollectingFrom"));
+                        returnValue = 1;
+                    }
                 }
-                catch (Exception ex)
+
+                // Set up the event to capture CTRL+C
+                Console.CancelKeyPress += (sender, eventArgs) =>
                 {
-                    Log.Error(ex, "{3} {0}: {1} {2}", c.GetType().Name, ex.Message, ex.StackTrace, Strings.Get("Err_CollectingFrom"));
-                    returnValue = 1;
+                    eventArgs.Cancel = true;
+                    exitEvent.Set();
+                };
+
+                Console.Write(Strings.Get("MonitoringPressC"));
+
+                // Write a spinner and wait until CTRL+C
+                WriteSpinner(exitEvent);
+                Log.Information("");
+
+                foreach (var c in monitors)
+                {
+                    Log.Information("{0}: {1}", Strings.Get("End"), c.GetType().Name);
+
+                    try
+                    {
+                        c.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error(ex, " {0}: {1}", c.GetType().Name, ex.Message, Strings.Get("Err_Stopping"));
+                        returnValue = 1;
+                    }
                 }
+
+                tr.Commit();
             }
-
-            // Set up the event to capture CTRL+C
-            Console.CancelKeyPress += (sender, eventArgs) => {
-                eventArgs.Cancel = true;
-                exitEvent.Set();
-            };
-
-            Console.Write(Strings.Get("MonitoringPressC"));
-
-            // Write a spinner and wait until CTRL+C
-            WriteSpinner(exitEvent);
-            Log.Information("");
-
-            foreach (var c in monitors)
-            {
-                Log.Information("{0}: {1}", Strings.Get("End"),c.GetType().Name);
-
-                try
-                {
-                    c.Stop();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error(ex, " {0}: {1}", c.GetType().Name, ex.Message, Strings.Get("Err_Stopping"));
-                    returnValue = 1;
-                }
-            }
-
-            //DatabaseManager.Commit();
-
             return returnValue;
         }
 
@@ -965,7 +966,6 @@ namespace AttackSurfaceAnalyzer
                 cmd.ExecuteNonQuery();
             }
 
-            //DatabaseManager.Commit();
             return results;
         }
 
@@ -1032,8 +1032,6 @@ namespace AttackSurfaceAnalyzer
                     Log.Error(ex, "{2} {0}: {1}", c.GetType().Name, ex.Message, Strings.Get("Err_Stopping"));
                 }
             }
-
-            //DatabaseManager.Commit();
 
             return 0;
         }
@@ -1152,63 +1150,65 @@ namespace AttackSurfaceAnalyzer
             Log.Information("{0} {1}", Strings.Get("Begin"), opts.RunId);
 
             string INSERT_RUN = "insert into runs (run_id, file_system, ports, users, services, registry, certificates, type, timestamp, version) values (@run_id, @file_system, @ports, @users, @services, @registry, @certificates, @type, @timestamp, @version)";
-
-            using (var cmd = new SQLiteCommand(INSERT_RUN, DatabaseManager.Connection))
+            using (SQLiteTransaction tr = DatabaseManager.Connection.BeginTransaction())
             {
-                if (opts.MatchedCollectorId != null)
+                using (var cmd = new SQLiteCommand(INSERT_RUN, DatabaseManager.Connection))
                 {
-                    using (var inner_cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection))
+                    if (opts.MatchedCollectorId != null)
                     {
-                        inner_cmd.Parameters.AddWithValue("@run_id", opts.MatchedCollectorId);
-                        using (var reader = inner_cmd.ExecuteReader())
+                        using (var inner_cmd = new SQLiteCommand(SQL_GET_RESULT_TYPES_SINGLE, DatabaseManager.Connection))
                         {
-                            while (reader.Read())
+                            inner_cmd.Parameters.AddWithValue("@run_id", opts.MatchedCollectorId);
+                            using (var reader = inner_cmd.ExecuteReader())
                             {
-                                opts.EnableFileSystemCollector = (int.Parse(reader["file_system"].ToString()) != 0);
-                                opts.EnableNetworkPortCollector = (int.Parse(reader["ports"].ToString()) != 0);
-                                opts.EnableUserCollector = (int.Parse(reader["users"].ToString()) != 0);
-                                opts.EnableServiceCollector = (int.Parse(reader["services"].ToString()) != 0);
-                                opts.EnableRegistryCollector = (int.Parse(reader["registry"].ToString()) != 0);
-                                opts.EnableCertificateCollector = (int.Parse(reader["certificates"].ToString()) != 0);
+                                while (reader.Read())
+                                {
+                                    opts.EnableFileSystemCollector = (int.Parse(reader["file_system"].ToString()) != 0);
+                                    opts.EnableNetworkPortCollector = (int.Parse(reader["ports"].ToString()) != 0);
+                                    opts.EnableUserCollector = (int.Parse(reader["users"].ToString()) != 0);
+                                    opts.EnableServiceCollector = (int.Parse(reader["services"].ToString()) != 0);
+                                    opts.EnableRegistryCollector = (int.Parse(reader["registry"].ToString()) != 0);
+                                    opts.EnableCertificateCollector = (int.Parse(reader["certificates"].ToString()) != 0);
+                                }
                             }
                         }
                     }
-                }
-                else if (opts.EnableAllCollectors)
-                {
-                    opts.EnableFileSystemCollector = true;
-                    opts.EnableNetworkPortCollector = true;
-                    opts.EnableUserCollector = true;
-                    opts.EnableServiceCollector = true;
-                    opts.EnableRegistryCollector = true;
-                    opts.EnableCertificateCollector = true;
-                }
+                    else if (opts.EnableAllCollectors)
+                    {
+                        opts.EnableFileSystemCollector = true;
+                        opts.EnableNetworkPortCollector = true;
+                        opts.EnableUserCollector = true;
+                        opts.EnableServiceCollector = true;
+                        opts.EnableRegistryCollector = true;
+                        opts.EnableCertificateCollector = true;
+                    }
 
-                cmd.Parameters.AddWithValue("@file_system", opts.EnableFileSystemCollector);
-                cmd.Parameters.AddWithValue("@ports", opts.EnableNetworkPortCollector);
-                cmd.Parameters.AddWithValue("@users", opts.EnableUserCollector);
-                cmd.Parameters.AddWithValue("@services", opts.EnableServiceCollector);
-                cmd.Parameters.AddWithValue("@registry", opts.EnableRegistryCollector);
-                cmd.Parameters.AddWithValue("@certificates", opts.EnableCertificateCollector);
-                
+                    cmd.Parameters.AddWithValue("@file_system", opts.EnableFileSystemCollector);
+                    cmd.Parameters.AddWithValue("@ports", opts.EnableNetworkPortCollector);
+                    cmd.Parameters.AddWithValue("@users", opts.EnableUserCollector);
+                    cmd.Parameters.AddWithValue("@services", opts.EnableServiceCollector);
+                    cmd.Parameters.AddWithValue("@registry", opts.EnableRegistryCollector);
+                    cmd.Parameters.AddWithValue("@certificates", opts.EnableCertificateCollector);
 
-                cmd.Parameters.AddWithValue("@run_id", opts.RunId);
 
-                cmd.Parameters.AddWithValue("@type", "collect");
-                cmd.Parameters.AddWithValue("@timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@version", Helpers.GetVersionString());
-                try
-                {
-                    cmd.ExecuteNonQuery();
-                    //DatabaseManager.Commit();
+                    cmd.Parameters.AddWithValue("@run_id", opts.RunId);
+
+                    cmd.Parameters.AddWithValue("@type", "collect");
+                    cmd.Parameters.AddWithValue("@timestamp", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    cmd.Parameters.AddWithValue("@version", Helpers.GetVersionString());
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warning(e.StackTrace);
+                        Log.Warning(e.Message);
+                        returnValue = (int)ERRORS.UNIQUE_ID;
+                        Telemetry.TrackTrace(Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error, e);
+                    }
                 }
-                catch (Exception e)
-                {
-                    Log.Warning(e.StackTrace);
-                    Log.Warning(e.Message);
-                    returnValue = (int)ERRORS.UNIQUE_ID;
-                    Telemetry.TrackTrace(Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error, e);
-                }
+                tr.Commit();
             }
             Log.Information("{0} {1} {2}", Strings.Get("Starting"), collectors.Count.ToString(), Strings.Get("Collectors"));
 
@@ -1217,8 +1217,12 @@ namespace AttackSurfaceAnalyzer
             {
                 try
                 {
-                    c.Execute();
-                    EndEvent.Add(c.GetType().ToString(), c.NumCollected().ToString());
+                    using (SQLiteTransaction tr = DatabaseManager.Connection.BeginTransaction())
+                    {
+                        c.Execute();
+                        EndEvent.Add(c.GetType().ToString(), c.NumCollected().ToString());
+                        tr.Commit();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -1230,7 +1234,6 @@ namespace AttackSurfaceAnalyzer
 
             Telemetry.TrackEvent("End Command", EndEvent);
 
-            //DatabaseManager.Commit();
             return returnValue;
         }
 

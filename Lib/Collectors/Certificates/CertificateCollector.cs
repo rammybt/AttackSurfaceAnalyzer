@@ -98,7 +98,6 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
             }
 
             Start();
-            Truncate(runId);
 
             foreach (StoreLocation storeLocation in (StoreLocation[])Enum.GetValues(typeof(StoreLocation)))
             {
@@ -124,7 +123,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
                     }
                 }
             }
-            //DatabaseManager.Commit();
+
             Stop();
         }
     }

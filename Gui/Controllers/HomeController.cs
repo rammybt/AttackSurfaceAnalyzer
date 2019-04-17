@@ -394,7 +394,6 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
                 try
                 {
                     cmd.ExecuteNonQuery();
-                    //DatabaseManager.Commit();
                 }
                 catch (Exception e)
                 {
