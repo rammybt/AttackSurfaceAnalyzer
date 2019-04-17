@@ -5,7 +5,7 @@ using System.IO.Compression;
 
 namespace AttackSurfaceAnalyzer.Utils
 {
-    static class Brotli
+    public static class Brotli
     {
         static BrotliDecoder bd = new BrotliDecoder();
         static BrotliEncoder be = new BrotliEncoder();

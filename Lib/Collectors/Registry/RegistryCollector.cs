@@ -30,7 +30,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
         private Action<RegistryObject> customCrawlHandler = null;
 
         private static readonly string SQL_TRUNCATE = "delete from registry where run_id=@run_id";
-        private static readonly string SQL_INSERT = "insert into registry (run_id, row_key, key, value, subkeys, permissions, serialized) values (@run_id, @row_key, @key, @value, @subkeys, @permissions, @serialized)";
+        private static readonly string SQL_INSERT = "insert into registry (run_id, row_key, key, permissions, serialized) values (@run_id, @row_key, @key, @permissions, @serialized)";
 
         public RegistryCollector(string RunId) : this(RunId, DefaultHives, null) { }
 
@@ -78,13 +78,8 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
                     cmd.Parameters.AddWithValue("@run_id", this.runId);
                     cmd.Parameters.AddWithValue("@row_key", CryptoHelpers.CreateHash(hashSeed));
                     cmd.Parameters.AddWithValue("@key", obj.Key);
-                   
-                        cmd.Parameters.AddWithValue("@value", JsonConvert.SerializeObject(obj.Values));
-                   
-
-                    cmd.Parameters.AddWithValue("@subkeys", JsonConvert.SerializeObject(obj.Subkeys));
                     cmd.Parameters.AddWithValue("@permissions", obj.Permissions);
-                    cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(obj));
+                    cmd.Parameters.AddWithValue("@serialized", Brotli.EncodeString(JsonConvert.SerializeObject(obj)).ToArray());
 
                     try
                     {
@@ -93,6 +88,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
                     catch (Exception e)
                     {
                         Log.Debug(e.GetType() + "thrown in registry collector");
+                        Log.Debug(e.Message);
                         Telemetry.TrackTrace(Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error, e);
                     }
                 }
@@ -104,7 +100,6 @@ namespace AttackSurfaceAnalyzer.Collectors.Registry
 
             customCrawlHandler?.Invoke(obj);
         }
-
         
 
         public override void Execute()

@@ -154,7 +154,14 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
                         {
                             while (reader.Read())
                             {
-                                obj.SerializedCompare = reader["serialized"].ToString();
+                                if (obj.ResultType == RESULT_TYPE.FILE || obj.ResultType == RESULT_TYPE.REGISTRY)
+                                {
+                                    obj.SerializedCompare = Brotli.DecodeString(reader["serialized"] as byte[]);
+                                }
+                                else
+                                {
+                                    obj.SerializedCompare = reader["serialized"].ToString();
+                                }
                             }
                         }
                     }
@@ -169,7 +176,14 @@ namespace AttackSurfaceAnalyzer.Gui.Controllers
                         {
                             while (reader.Read())
                             {
-                                obj.SerializedBase = reader["serialized"].ToString();
+                                if (obj.ResultType == RESULT_TYPE.FILE || obj.ResultType == RESULT_TYPE.REGISTRY)
+                                {
+                                    obj.SerializedBase = Brotli.DecodeString(reader["serialized"] as byte[]);
+                                }
+                                else
+                                {
+                                    obj.SerializedBase = reader["serialized"].ToString();
+                                }
                             }
                         }
                     }
