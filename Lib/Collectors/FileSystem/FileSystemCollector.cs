@@ -16,79 +16,6 @@ using Serilog;
 
 namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 {
-
-    public class WriteBuffer{
-        private static readonly string SQL_INSERT = "insert into file_system (run_id, row_key, path, permissions, size, hash, serialized) values (@run_id, @row_key, @path, @permissions, @size, @hash, @serialized)";
-
-        private readonly Queue<FileSystemObject> _queue = new Queue<FileSystemObject>();
-        private readonly SQLiteCommand cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
-
-        string runId;
-
-        private System.Timers.Timer CommitTimer = new System.Timers.Timer
-        {
-            Interval = 100,
-            AutoReset = true,
-        };
-
-        public void Write(FileSystemObject fso)
-        {
-            _queue.Append(fso);
-        }
-
-        public WriteBuffer(string runId)
-        {
-            this.runId = runId;
-            CommitTimer.Elapsed += (source, e) => 
-            {
-                WriteUntilEmpty(); 
-            };
-            CommitTimer.Enabled = true;
-
-        }
-
-        public void WriteUntilEmpty()
-        {
-            CommitTimer.Enabled = false;
-            while (_queue.Count > 0)
-            {
-                Log.Warning(_queue.Count.ToString());
-                FileSystemObject fso = _queue.Dequeue();
-                Write(cmd, fso);
-            }
-            CommitTimer.Enabled = true;
-        }
-
-
-        public void Write(SQLiteCommand cmd, FileSystemObject obj)
-        {
-            cmd.Parameters.Clear();
-            cmd.Parameters.AddWithValue("@run_id", runId);
-            cmd.Parameters.AddWithValue("@row_key", obj.RowKey);
-            cmd.Parameters.AddWithValue("@path", obj.Path);
-            cmd.Parameters.AddWithValue("@permissions", obj.Permissions ?? "");
-            cmd.Parameters.AddWithValue("@size", obj.Size);
-            cmd.Parameters.AddWithValue("@hash", obj.ContentHash ?? "");
-            cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(obj));
-            try
-            {
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception e)
-            {
-                Log.Information(e.StackTrace);
-                Log.Information(e.Message);
-                Log.Information(e.GetType().ToString());
-                Telemetry.TrackTrace(Microsoft.ApplicationInsights.DataContracts.SeverityLevel.Error, e);
-            }
-        }
-
-        public void Stop()
-        {
-            CommitTimer.Enabled = false;
-        }
-
-    }
     /// <summary>
     /// Collects Filesystem Data from the local file system.
     /// </summary>
@@ -102,9 +29,6 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
 
         private static readonly string SQL_INSERT = "insert into file_system (run_id, row_key, path, permissions, size, hash, serialized) values (@run_id, @row_key, @path, @permissions, @size, @hash, @serialized)";
 
-
-        private WriteBuffer wb;
-
         public void Write(FileSystemObject obj)
         {
             SQLiteCommand cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
@@ -114,7 +38,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
             cmd.Parameters.AddWithValue("@permissions", obj.Permissions ?? "");
             cmd.Parameters.AddWithValue("@size", obj.Size);
             cmd.Parameters.AddWithValue("@hash", obj.ContentHash ?? "");
-            cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(obj));
+            cmd.Parameters.AddWithValue("@serialized", Brotli.EncodeString(JsonConvert.SerializeObject(obj)).ToArray());
             try
             {
                 cmd.ExecuteNonQuery();
@@ -175,7 +99,6 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
                 return;
             }
 
-            wb = new WriteBuffer(runId);
             Start();
             
             if (this.roots == null || this.roots.Count() == 0)

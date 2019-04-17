@@ -51,7 +51,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
                     {
                         var obj = new FileSystemResult()
                         {
-                            Compare = JsonConvert.DeserializeObject<FileSystemObject>(reader["serialized"].ToString()),
+                            Compare = JsonConvert.DeserializeObject<FileSystemObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                             Base = null,
                             BaseRunId = firstRunId,
                             CompareRunId = secondRunId,
@@ -77,7 +77,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
                     {
                         var obj = new FileSystemResult()
                         {
-                            Base = JsonConvert.DeserializeObject<FileSystemObject>(reader["serialized"].ToString()),
+                            Base = JsonConvert.DeserializeObject<FileSystemObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                             Compare = null,
                             BaseRunId = firstRunId,
                             CompareRunId = secondRunId,
@@ -103,8 +103,8 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
                     {
                         var obj = new FileSystemResult()
                         {
-                            Base = JsonConvert.DeserializeObject<FileSystemObject>(reader["a_serialized"].ToString()),
-                            Compare = JsonConvert.DeserializeObject<FileSystemObject>(reader["b_serialized"].ToString()),
+                            Base = JsonConvert.DeserializeObject<FileSystemObject>(Brotli.DecodeString(reader["a_serialized"] as byte[])),
+                            Compare = JsonConvert.DeserializeObject<FileSystemObject>(Brotli.DecodeString(reader["b_serialized"] as byte[])),
                             BaseRunId = firstRunId,
                             CompareRunId = secondRunId,
                             CompareRowKey = reader["b_row_key"].ToString(),
