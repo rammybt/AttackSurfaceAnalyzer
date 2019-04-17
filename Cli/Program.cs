@@ -219,7 +219,6 @@ namespace AttackSurfaceAnalyzer
                     (ConfigCommandOptions opts) => RunConfigCommand(opts),
                     errs => 1
                 );
-            
             Log.Information("Attack Surface Analyzer {0}.", Strings.Get("Completed"));
             Log.CloseAndFlush();
         }
@@ -1231,7 +1230,7 @@ namespace AttackSurfaceAnalyzer
                 }
                 Log.Information("{0}: {1}", Strings.Get("End"), c.GetType().Name);
             }
-
+            Log.Debug("{0} bytes saved with compression", Brotli.savedBytes);
             Telemetry.TrackEvent("End Command", EndEvent);
 
             return returnValue;
