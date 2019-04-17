@@ -20,8 +20,8 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
                                                                and (
                                                                 a.row_key <> b.row_key
                                                                );";
-        private static readonly string SELECT_INSERTED_SQL = "select * from win_system_service b where b.run_id = @second_run_id and service_name not in (select service_name from win_system_service a where a.run_id = @first_run_id);";
-        private static readonly string SELECT_DELETED_SQL = "select * from win_system_service a where a.run_id = @first_run_id and service_name not in (select service_name from win_system_service b where b.run_id = @second_run_id);";
+        private static readonly string SELECT_INSERTED_SQL = "select row_key,serialized from win_system_service b where b.run_id = @second_run_id and service_name not in (select service_name from win_system_service a where a.run_id = @first_run_id);";
+        private static readonly string SELECT_DELETED_SQL = "select row_key,serialized from win_system_service a where a.run_id = @first_run_id and service_name not in (select service_name from win_system_service b where b.run_id = @second_run_id);";
         
 
         public ServiceCompare()
@@ -56,7 +56,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
                 {
                     var obj = new ServiceResult()
                     {
-                        Compare = JsonConvert.DeserializeObject<ServiceObject>(reader["serialized"].ToString()),
+                        Compare = JsonConvert.DeserializeObject<ServiceObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                         BaseRunId = firstRunId,
                         CompareRunId = secondRunId,
                         CompareRowKey = reader["row_key"].ToString(),
@@ -81,7 +81,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
                 {
                     var obj = new ServiceResult()
                     {
-                        Base = JsonConvert.DeserializeObject<ServiceObject>(reader["serialized"].ToString()),
+                        Base = JsonConvert.DeserializeObject<ServiceObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                         BaseRunId = firstRunId,
                         CompareRunId = secondRunId,
                         BaseRowKey = reader["row_key"].ToString(),
@@ -106,8 +106,8 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
                 {
                     var obj = new ServiceResult()
                     {
-                        Base = JsonConvert.DeserializeObject<ServiceObject>(reader["a_serialized"].ToString()),
-                        Compare = JsonConvert.DeserializeObject<ServiceObject>(reader["b_serialized"].ToString()),
+                        Base = JsonConvert.DeserializeObject<ServiceObject>(Brotli.DecodeString(reader["a_serialized"] as byte[])),
+                        Compare = JsonConvert.DeserializeObject<ServiceObject>(Brotli.DecodeString(reader["b_serialized"] as byte[])),
                         BaseRunId = firstRunId,
                         CompareRunId = secondRunId,
                         BaseRowKey = reader["a_row_key"].ToString(),

@@ -23,7 +23,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
     {
 
         private static readonly string SQL_TRUNCATE = "delete from certificates where run_id=@run_id";
-        private static readonly string SQL_INSERT = "insert into certificates (run_id, row_key, store_location, store_name, hash, hash_plus_store, cn, pkcs12, serialized) values (@run_id, @row_key, @store_location, @store_name, @hash, @hash_plus_store, @cn, @pkcs12, @serialized)";
+        private static readonly string SQL_INSERT = "insert into certificates (run_id, row_key, hash_plus_store, serialized) values (@run_id, @row_key, @hash_plus_store, @serialized)";
 
         private int recordCounter = 0;
 
@@ -51,32 +51,30 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
                 recordCounter++;
                 var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
                 cmd.Parameters.AddWithValue("@run_id", runId);
-                cmd.Parameters.AddWithValue("@store_location", storeLocation.ToString());
-                cmd.Parameters.AddWithValue("@store_name", storeName.ToString());
-                cmd.Parameters.AddWithValue("@hash", obj.GetCertHashString());
+
                 cmd.Parameters.AddWithValue("@hash_plus_store", obj.GetCertHashString() + storeLocation.ToString() + storeName.ToString());
-                cmd.Parameters.AddWithValue("@cn", obj.Subject);
+                cmd.Parameters.AddWithValue("@row_key", CryptoHelpers.CreateHash(runId + recordCounter));
+
+                byte[] Pkcs;
 
                 if (obj.HasPrivateKey)
                 {
-                    cmd.Parameters.AddWithValue("@pkcs12", "redacted");
+                    //Don't try to export certs with private keys
                 }
                 else
                 {
-                    cmd.Parameters.AddWithValue("@pkcs12", obj.Export(X509ContentType.Pkcs12));
+                    Pkcs = obj.Export(X509ContentType.Pkcs12);
                 }
-
-                cmd.Parameters.AddWithValue("@row_key", CryptoHelpers.CreateHash(runId + recordCounter));
 
                 var cert = new CertificateObject()
                 {
                     StoreLocation = storeLocation.ToString(),
                     StoreName = storeName.ToString(),
                     CertificateHashString = obj.GetCertHashString(),
-                    Subject = obj.Subject
+                    Subject = obj.Subject,
+                    Pkcs12 = obj.Export(X509ContentType.Pkcs12)
                 };
-
-                cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(cert));
+                cmd.Parameters.AddWithValue("@serialized", Brotli.EncodeString(JsonConvert.SerializeObject(obj)).ToArray());
                 cmd.ExecuteNonQuery();
             }
             catch (NullReferenceException e)

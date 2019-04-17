@@ -13,5 +13,6 @@ namespace AttackSurfaceAnalyzer.ObjectTypes
         public string StoreName;
         public string CertificateHashString;
         public string Subject;
+        public byte[] Pkcs12;
     }
 }

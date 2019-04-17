@@ -22,7 +22,7 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
         private Func<UserAccountObject, bool> filter;
 
         private static readonly string SQL_TRUNCATE = "delete from user_account where run_id = @run_id";
-        private static readonly string INSERT_SQL = "insert into user_account (run_id, row_key, account_type, caption, description, disabled, domain, full_name, install_date, local_account, lockout, name, password_changeable, password_expires, password_required, sid, uid, gid, inactive, home_directory, shell, password_storage_algorithm, properties, serialized) values (@run_id, @row_key, @account_type, @caption, @description, @disabled, @domain, @full_name, @install_date, @local_account, @lockout, @name, @password_changeable, @password_expires, @password_required, @sid, @uid, @gid, @inactive, @home_directory, @shell, @password_storage_algorithm, @properties, @serialized)";
+        private static readonly string INSERT_SQL = "insert into user_account (run_id, row_key, name, uid, serialized) values (@run_id, @row_key, @name, @uid, @serialized)";
 
 
         public UserAccountCollector(string runId, Func<UserAccountObject, bool> filter = null)
@@ -48,29 +48,10 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
 
             var cmd = new SQLiteCommand(INSERT_SQL, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId ?? "");
-            cmd.Parameters.AddWithValue("@row_key", obj.RowKey);
-            cmd.Parameters.AddWithValue("@account_type", obj.AccountType ?? "");
-            cmd.Parameters.AddWithValue("@caption", obj.Caption ?? "");
-            cmd.Parameters.AddWithValue("@description", obj.Description ?? "");
-            cmd.Parameters.AddWithValue("@disabled", obj.Disabled ?? "");
-            cmd.Parameters.AddWithValue("@domain", obj.Domain ?? "");
-            cmd.Parameters.AddWithValue("@full_name", obj.FullName ?? "");
-            cmd.Parameters.AddWithValue("@install_date", obj.InstallDate ?? "");
-            cmd.Parameters.AddWithValue("@local_account", obj.LocalAccount ?? "");
-            cmd.Parameters.AddWithValue("@lockout", obj.Lockout ?? "");
-            cmd.Parameters.AddWithValue("@name", obj.Name ?? "");
-            cmd.Parameters.AddWithValue("@password_changeable", obj.PasswordChangeable ?? "");
-            cmd.Parameters.AddWithValue("@password_expires", obj.PasswordExpires ?? "");
-            cmd.Parameters.AddWithValue("@password_required", obj.PasswordRequired ?? "");
-            cmd.Parameters.AddWithValue("@sid", obj.SID ?? "");
+            cmd.Parameters.AddWithValue("@row_key", obj.RowKey);         
+            cmd.Parameters.AddWithValue("@name", obj.Name ?? "");        
             cmd.Parameters.AddWithValue("@uid", obj.UID ?? "");
-            cmd.Parameters.AddWithValue("@gid", obj.GID ?? "");
-            cmd.Parameters.AddWithValue("@inactive", obj.Inactive ?? "");
-            cmd.Parameters.AddWithValue("@home_directory", obj.HomeDirectory ?? "");
-            cmd.Parameters.AddWithValue("@shell", obj.Shell ?? "");
-            cmd.Parameters.AddWithValue("@password_storage_algorithm", obj.PasswordStorageAlgorithm ?? "");
-            cmd.Parameters.AddWithValue("@properties", obj.PropertiesString());
-            cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(obj));
+            cmd.Parameters.AddWithValue("@serialized", Brotli.EncodeString(JsonConvert.SerializeObject(obj)).ToArray());
 
             cmd.ExecuteNonQuery();
         }

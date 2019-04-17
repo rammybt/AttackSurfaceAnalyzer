@@ -6,13 +6,14 @@ using AttackSurfaceAnalyzer.Utils;
 using System.Data.SQLite;
 using AttackSurfaceAnalyzer.ObjectTypes;
 using Serilog;
+using Newtonsoft.Json;
 
 namespace AttackSurfaceAnalyzer.Collectors.Certificates
 {
     public class CertificateCompare : BaseCompare
     {
-        private static readonly string SELECT_INSERTED_SQL = "select * from certificates b where b.run_id = @second_run_id and hash_plus_store not in (select hash_plus_store from certificates a where a.run_id = @first_run_id);";
-        private static readonly string SELECT_DELETED_SQL = "select * from certificates a where a.run_id = @first_run_id and hash_plus_store not in (select hash_plus_store from certificates b where b.run_id = @second_run_id);";
+        private static readonly string SELECT_INSERTED_SQL = "select row_key,serialized from certificates b where b.run_id = @second_run_id and hash_plus_store not in (select hash_plus_store from certificates a where a.run_id = @first_run_id);";
+        private static readonly string SELECT_DELETED_SQL = "select row_key,serialized from certificates a where a.run_id = @first_run_id and hash_plus_store not in (select hash_plus_store from certificates b where b.run_id = @second_run_id);";
 
         public CertificateCompare()
         {
@@ -52,13 +53,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
                             BaseRunId = firstRunId,
                             CompareRunId = secondRunId,
                             CompareRowKey = reader["row_key"].ToString(),
-                            Compare = new CertificateObject()
-                            {
-                                StoreLocation = reader["store_location"].ToString(),
-                                StoreName = reader["store_name"].ToString(),
-                                CertificateHashString = reader["hash"].ToString(),
-                                Subject = reader["cn"].ToString()
-                            },
+                            Compare = JsonConvert.DeserializeObject<CertificateObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                             ChangeType = CHANGE_TYPE.CREATED,
                             ResultType = RESULT_TYPE.CERTIFICATE
                         };
@@ -83,13 +78,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Certificates
                             BaseRunId = firstRunId,
                             CompareRunId = secondRunId,
                             CompareRowKey = reader["row_key"].ToString(),
-                            Base = new CertificateObject()
-                            {
-                                StoreLocation = reader["store_location"].ToString(),
-                                StoreName = reader["store_name"].ToString(),
-                                CertificateHashString = reader["hash"].ToString(),
-                                Subject = reader["cn"].ToString()
-                            },
+                            Base = JsonConvert.DeserializeObject<CertificateObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                             ChangeType = CHANGE_TYPE.DELETED,
                             ResultType = RESULT_TYPE.CERTIFICATE
                         };

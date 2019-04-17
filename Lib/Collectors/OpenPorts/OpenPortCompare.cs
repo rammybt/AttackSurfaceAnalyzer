@@ -6,6 +6,7 @@ using AttackSurfaceAnalyzer.ObjectTypes;
 using AttackSurfaceAnalyzer.Utils;
 using System.Data.SQLite;
 using Serilog;
+using Newtonsoft.Json;
 
 namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
 {
@@ -21,8 +22,8 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
         //                                                        or a.start_type <> b.start_type
         //                                                        or a.current_state <> b.current_state
         //                                                       );";
-        private static readonly string SELECT_INSERTED_SQL = "select * from network_ports b where b.run_id = @second_run_id and row_key not in (select row_key from network_ports a where a.run_id = @first_run_id);";
-        private static readonly string SELECT_DELETED_SQL = "select * from network_ports a where a.run_id = @first_run_id and row_key not in (select row_key from network_ports b where b.run_id = @second_run_id);";
+        private static readonly string SELECT_INSERTED_SQL = "select row_key,serialized from network_ports b where b.run_id = @second_run_id and row_key not in (select row_key from network_ports a where a.run_id = @first_run_id);";
+        private static readonly string SELECT_DELETED_SQL = "select row_key,serialized from network_ports a where a.run_id = @first_run_id and row_key not in (select row_key from network_ports b where b.run_id = @second_run_id);";
         
         public OpenPortCompare()
         {
@@ -58,14 +59,7 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
                 {
                     var obj = new OpenPortResult()
                     {
-                        Compare = new OpenPortObject()
-                        {
-                            address = reader["address"].ToString(),
-                            family = reader["family"].ToString(),
-                            port = reader["port"].ToString(),
-                            processName = reader["process_name"].ToString(),
-                            type = reader["type"].ToString()
-                        },
+                        Compare = JsonConvert.DeserializeObject<OpenPortObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                         Base = null,
                         BaseRunId = firstRunId,
                         CompareRunId = secondRunId,
@@ -92,14 +86,7 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
                 {
                     var obj = new OpenPortResult()
                     {
-                        Base = new OpenPortObject()
-                        {
-                            address = reader["address"].ToString(),
-                            family = reader["family"].ToString(),
-                            port = reader["port"].ToString(),
-                            processName = reader["process_name"].ToString(),
-                            type = reader["type"].ToString()
-                        },
+                        Base = JsonConvert.DeserializeObject<OpenPortObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                         Compare = null,
                         BaseRunId = firstRunId,
                         CompareRunId = secondRunId,

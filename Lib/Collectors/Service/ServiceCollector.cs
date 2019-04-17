@@ -26,8 +26,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
 
         //private static readonly string CREATE_SQL = "create table if not exists win_system_service (run_id text, row_key text, service_name text, display_name text, start_type text, current_state text)";
         private static readonly string SQL_TRUNCATE = "delete from win_system_service where run_id = @run_id";
-        private static readonly string INSERT_SQL = "insert into win_system_service (run_id, row_key, service_name, display_name, start_type, current_state, serialized) values (@run_id, @row_key, @service_name, @display_name, @start_type, @current_state, @serialized)";
-
+        private static readonly string INSERT_SQL = "insert into win_system_service (run_id, row_key, service_name, serialized) values (@run_id, @row_key, @service_name, @serialized)";
         public ServiceCollector(string runId)
         {
             this.runId = runId;
@@ -54,10 +53,7 @@ namespace AttackSurfaceAnalyzer.Collectors.Service
             cmd.Parameters.AddWithValue("@run_id", this.runId);
             cmd.Parameters.AddWithValue("@row_key", obj.GetUniqueHash());
             cmd.Parameters.AddWithValue("@service_name", obj.ServiceName);
-            cmd.Parameters.AddWithValue("@display_name", obj.DisplayName);
-            cmd.Parameters.AddWithValue("@start_type", obj.StartType);
-            cmd.Parameters.AddWithValue("@current_state", obj.CurrentState);
-            cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(obj));
+            cmd.Parameters.AddWithValue("@serialized", Brotli.EncodeString(JsonConvert.SerializeObject(obj)).ToArray());
 
             cmd.ExecuteNonQuery();
         }

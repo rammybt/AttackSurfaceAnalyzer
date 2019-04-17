@@ -13,8 +13,8 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
     public class UserAccountCompare : BaseCompare
     {
         private static readonly string SELECT_MODIFIED_SQL = "select a.row_key as 'a_row_key', a.serialized as 'a_serialized', b.row_key as 'b_row_key', b.serialized as 'b_serialized' from user_account a, user_account b where (((a.name <> '' or b.name <> '') and a.name = b.name) or ((a.uid <> '' or b.uid <> '') and a.uid = b.uid)) and a.run_id = @first_run_id and b.run_id = @second_run_id and a.row_key <> b.row_key;";
-        private static readonly string SELECT_INSERTED_SQL = "select b.serialized, b.row_key from user_account b where b.run_id = @second_run_id and row_key not in (select row_key from user_account a where a.run_id = @first_run_id);";
-        private static readonly string SELECT_DELETED_SQL = "select a.serialized, a.row_key from user_account a where a.run_id = @first_run_id and row_key not in (select row_key from user_account b where b.run_id = @second_run_id);";
+        private static readonly string SELECT_INSERTED_SQL = "select b.serialized, b.row_key from user_account b where b.run_id = @second_run_id and name not in (select name from user_account a where a.run_id = @first_run_id) and uid not in (select uid from user_account a where a.run_id = @first_run_id);";
+        private static readonly string SELECT_DELETED_SQL = "select a.serialized, a.row_key from user_account a where a.run_id = @first_run_id and name not in (select name from user_account b where b.run_id = @second_run_id) and uid not in (select uid from user_account a where a.run_id = @second_run_id);;";
 
         public UserAccountCompare()
         {
@@ -52,7 +52,7 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
                     {
                         var obj = new UserAccountResult()
                         {
-                            Compare = JsonConvert.DeserializeObject<UserAccountObject>(reader["serialized"].ToString()),
+                            Compare = JsonConvert.DeserializeObject<UserAccountObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                             CompareRowKey = reader["row_key"].ToString(),
                             BaseRunId = firstRunId,
                             CompareRunId = secondRunId,
@@ -77,7 +77,7 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
                     {
                         var obj = new UserAccountResult()
                         {
-                            Base = JsonConvert.DeserializeObject<UserAccountObject>(reader["serialized"].ToString()),
+                            Base = JsonConvert.DeserializeObject<UserAccountObject>(Brotli.DecodeString(reader["serialized"] as byte[])),
                             BaseRowKey = reader["row_key"].ToString(),
                             BaseRunId = firstRunId,
                             CompareRunId = secondRunId,
@@ -103,8 +103,8 @@ namespace AttackSurfaceAnalyzer.Collectors.UserAccount
                         Log.Warning("Modified row: {0}", reader["row_key"]?.ToString());
                         var obj = new UserAccountResult()
                         {
-                            Base = JsonConvert.DeserializeObject<UserAccountObject>(reader["a_serialized"].ToString()),
-                            Compare = JsonConvert.DeserializeObject<UserAccountObject>(reader["b_serialized"].ToString()),
+                            Base = JsonConvert.DeserializeObject<UserAccountObject>(Brotli.DecodeString(reader["a_serialized"] as byte[])),
+                            Compare = JsonConvert.DeserializeObject<UserAccountObject>(Brotli.DecodeString(reader["b_serialized"] as byte[])),
                             BaseRowKey = reader["a_row_key"].ToString(),
                             CompareRowKey = reader["b_row_key"].ToString(),
                             BaseRunId = firstRunId,

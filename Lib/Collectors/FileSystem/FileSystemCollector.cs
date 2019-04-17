@@ -26,8 +26,7 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
         private bool INCLUDE_CONTENT_HASH = false;
         private static readonly string SQL_TRUNCATE = "delete from file_system where run_id=@run_id";
 
-
-        private static readonly string SQL_INSERT = "insert into file_system (run_id, row_key, path, permissions, size, hash, serialized) values (@run_id, @row_key, @path, @permissions, @size, @hash, @serialized)";
+        private static readonly string SQL_INSERT = "insert into file_system (run_id, row_key, path, serialized) values (@run_id, @row_key, @path, @serialized)";
 
         public void Write(FileSystemObject obj)
         {
@@ -35,9 +34,6 @@ namespace AttackSurfaceAnalyzer.Collectors.FileSystem
             cmd.Parameters.AddWithValue("@run_id", runId);
             cmd.Parameters.AddWithValue("@row_key", obj.RowKey);
             cmd.Parameters.AddWithValue("@path", obj.Path);
-            cmd.Parameters.AddWithValue("@permissions", obj.Permissions ?? "");
-            cmd.Parameters.AddWithValue("@size", obj.Size);
-            cmd.Parameters.AddWithValue("@hash", obj.ContentHash ?? "");
             cmd.Parameters.AddWithValue("@serialized", Brotli.EncodeString(JsonConvert.SerializeObject(obj)).ToArray());
             try
             {

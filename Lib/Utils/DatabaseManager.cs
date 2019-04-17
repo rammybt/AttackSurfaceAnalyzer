@@ -15,12 +15,12 @@ namespace AttackSurfaceAnalyzer.Utils
         private static readonly string SQL_CREATE_RUNS = "create table if not exists runs (run_id text, file_system int, ports int, users int, services int, registry int, certificates int, type text, timestamp text, version text, unique(run_id))";
         private static readonly string SQL_CREATE_FILE_MONITORED = "create table if not exists file_system_monitored (run_id text, row_key text, timestamp text, change_type int, path text, old_path text, name text, old_name text, extended_results text, notify_filters text, serialized text)";
 
-        private static readonly string SQL_CREATE_FILE_SYSTEM_COLLECTION = "create table if not exists file_system (run_id text, row_key text, path text, permissions text, size int, hash text, serialized blob)";
-        private static readonly string SQL_CREATE_OPEN_PORT_COLLECTION = "create table if not exists network_ports (run_id text, row_key text, family text, address text, type text, port int, process_name text, serialized text)";
-        private static readonly string SQL_CREATE_SERVICE_COLLECTION = "create table if not exists win_system_service (run_id text, row_key text, service_name text, display_name text, start_type text, current_state text, serialized text)";
-        private static readonly string SQL_CREATE_USER_COLLECTION = "create table if not exists user_account (run_id text, row_key text, account_type text, caption text, description text, disabled text, domain text, full_name text, install_date text, local_account text, lockout text, name text, password_changeable text, password_expires text, password_required text, sid text, uid text, gid text, inactive text, home_directory text, shell text, password_storage_algorithm text, properties text data_hash text, serialized text)";
+        private static readonly string SQL_CREATE_FILE_SYSTEM_COLLECTION = "create table if not exists file_system (run_id text, row_key text, path text, serialized blob)";
+        private static readonly string SQL_CREATE_OPEN_PORT_COLLECTION = "create table if not exists network_ports (run_id text, row_key text, serialized blob)";
+        private static readonly string SQL_CREATE_SERVICE_COLLECTION = "create table if not exists win_system_service (run_id text, row_key text, serialized blob)";
+        private static readonly string SQL_CREATE_USER_COLLECTION = "create table if not exists user_account (run_id text, row_key text, name text, uid text, serialized blob)";
         private static readonly string SQL_CREATE_REGISTRY_COLLECTION = "create table if not exists registry (run_id text, row_key text, key text, permissions text, serialized blob)";
-        private static readonly string SQL_CREATE_CERTIFICATES_COLLECTION = "create table if not exists certificates (run_id text, row_key text, pkcs12 text, store_location text, store_name text, hash text, hash_plus_store text, cert text, cn text, serialized text)";
+        private static readonly string SQL_CREATE_CERTIFICATES_COLLECTION = "create table if not exists certificates (run_id text, row_key text, hash_plus_store text, serialized blob)";
 
         private static readonly string SQL_CREATE_ANALYZED_TABLE = "create table if not exists results (base_run_id text, compare_run_id text, status int)";
 

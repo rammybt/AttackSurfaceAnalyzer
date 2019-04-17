@@ -19,7 +19,7 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
 
         private HashSet<string> processedObjects;
 
-        private static readonly string SQL_INSERT = "insert into network_ports (run_id, row_key, family, address, type, port, process_name, serialized) values (@run_id, @row_key, @family, @address, @type, @port, @process_name, @serialized)";
+        private static readonly string SQL_INSERT = "insert into network_ports (run_id, row_key, port, serialized) values (@run_id, @row_key, @port, @serialized)";
         private static readonly string SQL_TRUNCATE = "delete from network_ports where run_id = @run_id";
 
         public OpenPortCollector(string runId)
@@ -78,12 +78,8 @@ namespace AttackSurfaceAnalyzer.Collectors.OpenPorts
             var cmd = new SQLiteCommand(SQL_INSERT, DatabaseManager.Connection);
             cmd.Parameters.AddWithValue("@run_id", this.runId);
             cmd.Parameters.AddWithValue("@row_key", obj.RowKey);
-            cmd.Parameters.AddWithValue("@family", obj.family);
-            cmd.Parameters.AddWithValue("@address", obj.address);
-            cmd.Parameters.AddWithValue("@type", obj.type);
             cmd.Parameters.AddWithValue("@port", obj.port);
-            cmd.Parameters.AddWithValue("@process_name", obj.processName ?? "");
-            cmd.Parameters.AddWithValue("@serialized", JsonConvert.SerializeObject(obj));
+            cmd.Parameters.AddWithValue("@serialized", Brotli.EncodeString(JsonConvert.SerializeObject(obj)).ToArray());
             cmd.ExecuteNonQuery();
         }
 
